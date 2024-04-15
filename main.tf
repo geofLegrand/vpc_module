@@ -1,5 +1,5 @@
 module "my_subnets" {
-  source             = "../subnets"
+  source             = "./subnets"
   vpc_cidr           = var.vpc_cidr
   nbr_azs            = var.nbr_azs
   nbr_prv_sub_blocks = var.nbr_prv_sub_blocks
