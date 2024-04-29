@@ -9,30 +9,30 @@ variable "vpc_cidr" {
    }
 }
 variable "nbr_pub_sub_blocks" {
-  description = "Number of public subnets.Your private subnets must be 1 or 2"
+  description = "Number of public subnets.Your private subnets must be between 1 and 4"
   //default = 1
   type = number
    validation {
-     condition = var.nbr_pub_sub_blocks >= 1 && var.nbr_pub_sub_blocks < 3
-     error_message = "Error: the number of private subnets must be 1 or 2" 
+     condition = var.nbr_pub_sub_blocks >= 1 && var.nbr_pub_sub_blocks < 5
+     error_message = "Error: the number of public subnets must be between 1 and 4" 
    }
 }
 variable "nbr_prv_sub_blocks" {
-  description = "Number of private subnets.Your private subnets must be in 1 and 4"
+  description = "Number of private subnets.Your private subnets must be at least equal 0"
   //default = 3
   type = number
      validation {
-     condition = var.nbr_prv_sub_blocks >= 1 && var.nbr_prv_sub_blocks < 5
-     error_message = "Error: the number of private subnets must between 1 and 4" 
+     condition = var.nbr_prv_sub_blocks >= 0 
+     error_message = "Error: the number of private subnets must be at least equal 0 " 
    }
 }
 variable "nbr_azs" {
-  description = "Number of availability zones. Your availability zones must be less than 3"
+  description = "Number of availability zones. Your availability zones must be less than 5"
   //default = 2
   type = number
    validation {
-     condition = var.nbr_azs >= 1 && var.nbr_azs < 3
-     error_message = "Error: the number of availability zones must be less than 3" 
+     condition = var.nbr_azs >= 1 && var.nbr_azs < 5
+     error_message = "Error: the number of availability zones must be less than 5" 
    }
 }
 variable "costum_az" {
@@ -52,12 +52,12 @@ variable "type_nat_gateway" {
 variable "enable_dns_hostnames" {
   type    = bool
 }
+
 variable "enable_dns_support" {
   type    = bool
 }
 
 variable "tag_environment" {}
-
 variable "internet_gw" {}
 variable "tag_vpc_name" {}
 variable "region" {

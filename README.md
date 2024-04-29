@@ -36,11 +36,11 @@ This module supports two scenarios for creating NAT gateways. Each will be expla
 
 ## Number of availability zone
 
-- The availability zones must be less than 3. It's mean that the number can be `1` or `2`.
+- The availability zones must be less than 3. It's mean that the number can be `1` to `3`.
     - `nbr_azs = 2`
 
 ## Number of subnets
 
   The subnets are divided into two. The public subnets `nbr_pub_sub_blocks` and the private subnets `nbr_prv_sub_blocks`.
-- The Number of private subnets.Your private subnets must be in `1` and `4`
-- The Number of public subnets.Your public subnets must be in `1` and `2`
+- The Number of private subnets.Your private subnets must be in `1` and `xxxxx`
+- The Number of public subnets.Your public subnets must be in `1` and `3`

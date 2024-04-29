@@ -8,11 +8,12 @@ module "my_subnets" {
 }
 
 locals {
-  count_rtb = length(module.my_subnets.priv_subnets_az1)>=1 && length(module.my_subnets.priv_subnets_az2)>=1 ? 2 : 1 
+  count_rtb = module.my_subnets.prv_rtb
+   //length(module.my_subnets.priv_subnets_az1)>=1 && length(module.my_subnets.priv_subnets_az2)>=1 ? 2 : 1 
 }
 
 locals {
-  count_nat = var.type_nat_gateway == "1 in AZ" ? 1 : local.count_rtb < 2 ? 1 : 2 
+  count_nat = var.type_nat_gateway == "1 in AZ" ? 1 : local.count_rtb //< 2 ? 1 : 2 
 }
 
 // create a new vpc
@@ -133,6 +134,33 @@ resource "aws_subnet" "private_subnets_az2" {
   }
  
 }
+// Private subnets 3
+resource "aws_subnet" "private_subnets_az3" {
+  count             = length(module.my_subnets.priv_subnets_az3)
+  cidr_block        = module.my_subnets.priv_subnets_az3[count.index].cidr
+  availability_zone = module.my_subnets.priv_subnets_az3[count.index].az
+  vpc_id            = aws_vpc.my_aws_vpc.id
+
+  tags = {
+    Name : "${var.tag_vpc_name}-prv-sub-${count.index + 1}"
+  }
+  
+}
+// Private subnets 4
+resource "aws_subnet" "private_subnets_az4" {
+  count             = length(module.my_subnets.priv_subnets_az4)
+  cidr_block        = module.my_subnets.priv_subnets_az4[count.index].cidr
+  availability_zone = module.my_subnets.priv_subnets_az4[count.index].az
+  vpc_id            = aws_vpc.my_aws_vpc.id
+
+  tags = {
+    Name : "${var.tag_vpc_name}-prv-sub-${count.index + 1}"
+  }
+ 
+}
+
+
+
 // associate my publics subnets to principal route table
 resource "aws_route_table_association" "ass_sb_pub_az" {
   count          = length(module.my_subnets.pub_subnets)
@@ -141,7 +169,7 @@ resource "aws_route_table_association" "ass_sb_pub_az" {
   depends_on     = [aws_subnet.public_subnets_az]
 }
 
-// associate my private subnet to route table
+// associate my private subnet 1 to route table
 resource "aws_route_table_association" "priv_rt_az" {
   count          = length(module.my_subnets.priv_subnets_az1)
   subnet_id      = aws_subnet.private_subnets_az1[count.index].id
@@ -149,7 +177,7 @@ resource "aws_route_table_association" "priv_rt_az" {
   depends_on     = [aws_subnet.private_subnets_az1]
 }
 
-// associate my private subnet to route table
+// associate my private subnet 2 to route table
 resource "aws_route_table_association" "priv_rt_az2" {
   count          = length(module.my_subnets.priv_subnets_az2)
   subnet_id      = aws_subnet.private_subnets_az2[count.index].id
@@ -157,6 +185,20 @@ resource "aws_route_table_association" "priv_rt_az2" {
   depends_on     = [aws_subnet.private_subnets_az2]
 }
 
+// associate my private subnet 3 to route table
+resource "aws_route_table_association" "priv_rt_az3" {
+  count          = length(module.my_subnets.priv_subnets_az3)
+  subnet_id      = aws_subnet.private_subnets_az3[count.index].id
+  route_table_id = aws_route_table.route_table_az[2].id
+  depends_on     = [aws_subnet.private_subnets_az3]
+}
+// associate my private subnet 4 to route table
+resource "aws_route_table_association" "priv_rt_az4" {
+  count          = length(module.my_subnets.priv_subnets_az4)
+  subnet_id      = aws_subnet.private_subnets_az4[count.index].id
+  route_table_id = aws_route_table.route_table_az[3].id
+  depends_on     = [aws_subnet.private_subnets_az4]
+}
 output "vpc_id" {
    value = aws_vpc.my_aws_vpc.id
 }

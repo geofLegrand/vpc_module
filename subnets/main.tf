@@ -8,10 +8,12 @@
 ### generate the differents subnets (private and public)
 locals {
    a = slice(split(".",var.vpc_cidr),0,2)
-  
-   _public_subnet_blocks = var.nbr_pub_sub_blocks == 2 ? [
-    "${join(".",local.a)}.100.0/24","${join(".",local.a)}.200.0/24"] : var.nbr_pub_sub_blocks == 1 ? ["${join(".",local.a)}.100.0/24"]:[]
-   
+
+   _public_subnet_blocks =  [
+      for i in range(var.nbr_pub_sub_blocks):
+      "${join(".",local.a)}.${i+1}1.0/24"      
+    ]
+
    _private_subnet_blocks = [
       for i in range(var.nbr_prv_sub_blocks): 
       "${join(".",local.a)}.${i+1}.0/24"
@@ -24,43 +26,43 @@ locals {
 }
 ### get the public subnets per az
 locals {
-   pub_subnets = var.nbr_azs == 1 ? [
-        for p in local._public_subnet_blocks:{
-            az = local.availability_zones[0]
-            cidr = p
-        }
-   ]:var.nbr_azs == 2 && var.nbr_pub_sub_blocks == 1 ? [
-    { az = local.availability_zones[0], cidr = local._public_subnet_blocks[0]}
-   ]:var.nbr_azs == 2 && var.nbr_pub_sub_blocks == 2 ? [
-     for i in range(var.nbr_azs): {
-      az = local.availability_zones[i], 
-      cidr = local._public_subnet_blocks[i]
+   pub_subnets =  [
+     for i in range(var.nbr_pub_sub_blocks):{
+          az = local.availability_zones[  tonumber(i) % var.nbr_azs == 0 ? 0 :
+                         tonumber("${tonumber(i)-1}") % var.nbr_azs == 0 ? 1 : 
+                         tonumber("${tonumber(i)-2}") % var.nbr_azs == 0 ? 2 : 
+                         tonumber("${tonumber(i)-3}") % var.nbr_azs == 0 ? 3 : -1
+           ]
+          cidr = local._public_subnet_blocks[i]
      }
-   ]:[]
+   ]
+
     
 }
 ### get the private subnets per az
 locals {
-    prv_sunbets =  var.nbr_azs == 1 ? [
-        for p in local._private_subnet_blocks:{
-            az = local.availability_zones[0]
-            cidr = p
-        }
-   ]:var.nbr_azs == 2 && (var.nbr_prv_sub_blocks == 4 || var.nbr_prv_sub_blocks == 3) ? [
+  
+   prv_sunbets = [
      for i in range(var.nbr_prv_sub_blocks):{
-          az = i == 0 || i == 1 ? local.availability_zones[0] : local.availability_zones[1]
+          az = local.availability_zones[  tonumber(i) % var.nbr_azs == 0 ? 0 :
+                         tonumber("${tonumber(i)-1}") % var.nbr_azs == 0 ? 1 : 
+                         tonumber("${tonumber(i)-2}") % var.nbr_azs == 0 ? 2 : 
+                         tonumber("${tonumber(i)-3}") % var.nbr_azs == 0 ? 3 : -1
+           ]
           cidr = local._private_subnet_blocks[i]
      }
-   ]:var.nbr_azs == 2 && var.nbr_prv_sub_blocks == 2 ? [
-     for i in range(var.nbr_prv_sub_blocks):{
-          az = i == 0 ? local.availability_zones[0] : local.availability_zones[1]
-          cidr = local._private_subnet_blocks[i]
-     }
-   ]:var.nbr_azs == 2 && var.nbr_prv_sub_blocks == 1 ? [
-    { az = local.availability_zones[0], cidr = local._private_subnet_blocks[0]}
-   ]:[]
+   ]
+
 }
 
+locals {
+   _r1 = [for e in local.prv_sunbets : e  if e.az =="${var.region}a" ]
+   _r2 = [for e in local.prv_sunbets : e  if e.az =="${var.region}b" ]
+   _r3 = [for e in local.prv_sunbets : e  if e.az =="${var.region}c" ]
+   _r4 = [for e in local.prv_sunbets : e  if e.az =="${var.region}d" ]
+   nb_route_tbl =(length(local._r1)>0 ? 1 : 0) + (length(local._r2)>0 ? 1 : 0) + (length(local._r3)>0 ? 1 : 0) + (length(local._r4)>0 ? 1 : 0)
+
+}
 
 
 output "availability_zones" {
@@ -69,11 +71,24 @@ output "availability_zones" {
 output "pub_subnets" {
    value = local.pub_subnets 
 }
+# output "priv_subnets" {
+#    value =local.prv_sunbets
+# }
 output "priv_subnets_az1" {
-   value = [for e in local.prv_sunbets : e  if e.az =="${var.region}a" ] 
+   
+   value = local._r1
 }
 output "priv_subnets_az2" {
-   value = [for e in local.prv_sunbets : e  if e.az =="${var.region}b" ] 
+   value = local._r2
+}
+output "priv_subnets_az3" {
+   value = local._r3
+}
+output "priv_subnets_az4" {
+   value = local._r4
+}
+output "prv_rtb" {
+  value = local.nb_route_tbl
 }
 output "vpc_cidr" {
   value = var.vpc_cidr
